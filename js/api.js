@@ -35,6 +35,41 @@ const mostrarProductos = async () => {
     }
 };
 
+const obtenerProductosPorCategoria = async (categoria) => {
+    try {
+        let url = `https://fakestoreapi.com/products/category/${categoria}`;
+        let respuesta = await fetch(url);
+        let json = await respuesta.json();
+        return json;
+    } catch (error) {
+        console.log('Error obteniendo productos por categoría', error);
+    }
+};
+
+const mostrarProductosPorCategoria = async (categoria) => {
+    try {
+        let productos = await obtenerProductosPorCategoria(categoria);
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = `<h2>Products in ${categoria}</h2><ul>`;
+        
+        productos.forEach(producto => {
+            const productElement = document.createElement('li');
+            productElement.innerHTML = `
+                <h3>${producto.title}</h3>
+                <img src="${producto.image}" alt="${producto.title}" width="100">
+                <p>${producto.description}</p>
+                <p>Price: $${producto.price}</p>
+                <button onclick="addToCart(${producto.id})">Add to Cart</button>
+            `;
+            mainContent.appendChild(productElement);
+        });
+        mainContent.innerHTML += '</ul>';
+    } catch (error) {
+        console.log('Se produjo un error al mostrar los productos de la categoría:', error);
+    }
+};
+
+
 const mostrarCategoria = async () => {
     try {
         let categorias = await obtenerCategorias();
@@ -42,13 +77,21 @@ const mostrarCategoria = async () => {
         listCategoria.innerHTML = ''; 
         categorias.forEach(categoria => {
             const li = document.createElement('li');
-            li.textContent = categoria; // Asignar el nombre de la categoría al elemento <li>
-            listCategoria.appendChild(li); // Agregar el <li> a la lista de categorías
+            const button = document.createElement('button');
+            button.textContent = categoria;
+            button.addEventListener('click', () => {
+                mostrarProductosPorCategoria(categoria);
+            });
+            li.appendChild(button);
+            listCategoria.appendChild(li);
         });
     } catch (error) {
         console.log('Se produjo un error al mostrar las categorías:', error);
     }
 };
+
+
+
 
 async function loadProducts() {
     const mainContent = document.getElementById('main-content');
@@ -79,11 +122,10 @@ async function loadProducts() {
 document.addEventListener('DOMContentLoaded', () => {
     const cate = document.getElementById('cate');
     if (cate) {
-        cate.addEventListener('click', () => {
+        cate.addEventListener('click', (event) => {
+            event.preventDefault();  
             mostrarCategoria();
         });
-    };
+    }
     loadProducts();
-})
-
-mostrarProductos();
+});
